@@ -7,7 +7,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import google.generativeai as genai
-key = 'AIzaSyD7uZs_czeXMEbP64JFFXWcy2choY9NW7o'
+key = 'key goes here'
 genai.configure(api_key=key)
 model = genai.GenerativeModel('gemini-pro')
 
