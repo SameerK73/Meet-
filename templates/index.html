@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript Processor</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script>
+        async function processTranscript(event) {
+            event.preventDefault();
+            const transcript = document.getElementById('transcript').value;
+            const createEvent = document.getElementById('createEvent').checked;
+
+            // Show loading symbol
+            document.getElementById('loading').style.display = 'block';
+
+            try {
+                const response = await fetch('/process_transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ transcript, createEvent }),
+                });
+
+                // Hide loading symbol
+                document.getElementById('loading').style.display = 'none';
+
+                if (response.ok) {
+                    const data = await response.json();
+                    // Populate Action Items
+                    document.getElementById('action-items').innerHTML = `<h3>Action Items</h3><p>${data.action_items.replace(/\n/g, '<br>')}</p>`;
+                    // Populate Summary
+                    document.getElementById('summary').innerHTML = `<h3>Summary</h3><p>${data.summary}</p>`;
+                    
+                    const eventDetails = data.event_details;
+                    const attendeesList = eventDetails.attendees ? eventDetails.attendees.map(attendee => `<li>${attendee.email}</li>`).join('') : '';
+                    // Populate Event Details
+                    document.getElementById('event-details').innerHTML = `
+                        <h3>Event Details</h3>
+                        <p><strong>Event Name:</strong> ${eventDetails.summary}</p>
+                        <p><strong>Location:</strong> ${eventDetails.location}</p>
+                        <p><strong>Description:</strong> ${eventDetails.description}</p>
+                        <p><strong>Start Time:</strong> ${eventDetails.start.dateTime} (${eventDetails.start.timeZone})</p>
+                        <p><strong>End Time:</strong> ${eventDetails.end.dateTime} (${eventDetails.end.timeZone})</p>
+                        <p><strong>Attendees:</strong></p>
+                        <ul>${attendeesList}</ul>
+                    `;
+                } else {
+                    const errorData = await response.json();
+                    alert('Error: ' + errorData.error);
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                alert('An error occurred: ' + error.message);
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Meet+</h1>
+        <form onsubmit="processTranscript(event)">
+            <textarea id="transcript" rows="10" placeholder="Paste your transcript here..." required></textarea>
+            <div>
+                <label>
+                    <input type="checkbox" id="createEvent" />
+                    Create Event
+                </label>
+            </div>
+            <button type="submit">Process Transcript</button>
+        </form>
+
+        <!-- Loading Symbol -->
+        <div id="loading" style="display: none;">
+            <p>Loading... <span class="loader"></span></p>
+        </div>
+
+        <div class="results">
+            <h2>Results</h2>
+            <div id="action-items">
+                <h3>Action Items</h3>
+                <p><!-- Action items will be displayed here --></p>
+            </div>
+            <div id="summary">
+                <h3>Summary</h3>
+                <p><!-- Summary will be displayed here --></p>
+            </div>
+            <div id="event-details">
+                <h3>Event Details</h3>
+                <p><!-- Event details will be displayed here --></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
